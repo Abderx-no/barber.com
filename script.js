@@ -52,8 +52,8 @@ document.getElementById("send").onclick = async function() {
       throw new Error("Booking failed");
     }
 
-    e.textContent = "Prenotazione inviata con successo!";
-
+e.className = "success";
+e.innerHTML = "✓ Prenotazione inviata con successo!";
   } catch (error) {
     e.textContent = "Errore durante la prenotazione. Riprova.";
   } finally {
