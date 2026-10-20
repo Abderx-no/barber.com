@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Barbiere – Prenota il tuo appuntamento</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="w">
+  <h1>✂ BARBER SHOP</h1>
+  <p class="sub">Prenota il tuo appuntamento in pochi secondi</p>
+
+  <div class="card"><h2>1 · Servizio</h2><div class="opts" id="srv"></div></div>
+  <div class="card"><h2>2 · Giorno</h2><input type="date" id="day"></div>
+  <div class="card"><h2>3 · Orario</h2><div class="slots" id="slots"></div></div>
+  <div class="card"><h2>4 · I tuoi dati</h2>
+    <label for="nm">Nome e cognome</label><input id="nm" autocomplete="name">
+    <label for="tel">Telefono</label><input id="tel" type="tel" autocomplete="tel">
+  </div>
+  <div id="err"></div>
+  <button class="go" id="send">Prenota su WhatsApp</button>
+  <p class="info">Via Roma 1, Milano · Lun–Sab 9:00–19:00 · Domenica chiuso<br>Riceverai conferma via WhatsApp.</p>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
