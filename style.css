@@ -22,3 +22,23 @@ input{width:100%;padding:11px;border-radius:10px;border:1px solid var(--bd);back
 button.go{width:100%;padding:14px;border:0;border-radius:12px;background:var(--ac);color:var(--ac-tx);font:inherit;font-weight:bold;font-size:1.05rem;cursor:pointer}
 #err{color:#c0392b;font-family:system-ui,sans-serif;font-size:.9rem;min-height:1.3em;margin:8px 0}
 .info{text-align:center;color:var(--mu);font-family:system-ui,sans-serif;font-size:.85rem;margin-top:20px}
+
+#err.success {
+  color: #16a34a;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+#err.error {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 12px;
+}
