@@ -55,8 +55,8 @@ document.getElementById("send").onclick = async function() {
 e.className = "success";
 e.innerHTML = "✓ Prenotazione inviata con successo!";
   } catch (error) {
-    e.textContent = "Errore durante la prenotazione. Riprova.";
-  } finally {
+e.className = "error";
+e.textContent = "✕ Errore durante la prenotazione. Riprova.";  } finally {
     btn.disabled = false;
   }
 };
