@@ -13,9 +13,50 @@ function draw(){slots.innerHTML="";sel.t=null;var d=new Date(day.value+"T12:00:0
   var past=day.value===day.min&&new Date(day.value+"T"+o+":00")<now;b.disabled=closed||past;
   b.onclick=function(){sel.t=o;[].forEach.call(slots.children,function(c){c.classList.remove("on")});b.classList.add("on")};slots.appendChild(b)})}
 day.onchange=draw;draw();
-document.getElementById("send").onclick=function(){
- var n=document.getElementById("nm").value.trim(),t=document.getElementById("tel").value.trim(),e=document.getElementById("err");
- if(!sel.s||!day.value||!sel.t||!n||!t){e.textContent="Compila tutti i campi per continuare.";return}
- e.textContent="";var d=new Date(day.value+"T12:00:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
- var m="Ciao! Vorrei prenotare: "+sel.s+" – "+d+" alle "+sel.t+". Nome: "+n+", tel: "+t+".";
- window.location.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(m)};
+
+var API_URL = "https://barber-booking.abderrahmanem627.workers.dev/";
+
+document.getElementById("send").onclick = async function() {
+  var n = document.getElementById("nm").value.trim();
+  var t = document.getElementById("tel").value.trim();
+  var e = document.getElementById("err");
+
+  if (!sel.s || !day.value || !sel.t || !n || !t) {
+    e.textContent = "Compila tutti i campi per continuare.";
+    return;
+  }
+
+  e.textContent = "Invio prenotazione in corso...";
+
+  var btn = document.getElementById("send");
+  btn.disabled = true;
+
+  try {
+    var response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        service: sel.s,
+        date: day.value,
+        time: sel.t,
+        name: n,
+        phone: t
+      })
+    });
+
+    var result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error("Booking failed");
+    }
+
+    e.textContent = "Prenotazione inviata con successo!";
+
+  } catch (error) {
+    e.textContent = "Errore durante la prenotazione. Riprova.";
+  } finally {
+    btn.disabled = false;
+  }
+};
