@@ -4,8 +4,8 @@ var API_URL = "https://barber-booking.abderrahmanem627.workers.dev/";
 // id = nome in italiano che arriva al barbiere; price/min sono mostrati al cliente.
 // I nomi nelle altre lingue sono in T.xx.services qui sotto.
 var SERVIZI = [
-  {id: "Taglio",         price: "€7", min: 30},
-  {id: "Barba",          price: "€5", min: 20},
+  {id: "Taglio",         price: "€7",  min: 30},
+  {id: "Barba",          price: "€5",  min: 20},
   {id: "Taglio + Barba", price: "€10", min: 45},
   {id: "Rasatura",       price: "€12", min: 25}
 ];
@@ -28,7 +28,8 @@ var T = {
     phone: "Inserisci un numero di telefono valido.",
     sending: "Invio prenotazione in corso...",
     ok: "✓ Prenotazione inviata con successo!",
-    fail: "✕ Errore durante la prenotazione. Riprova."
+    fail: "✕ Errore durante la prenotazione. Riprova.",
+    taken: "✕ Questo orario è appena stato prenotato. Scegline un altro."
   },
   en: {
     dir: "ltr",
@@ -38,7 +39,7 @@ var T = {
     lbName: "Full name", lbTel: "Phone",
     book: "Book now",
     addr: "Via Colonna Rotta, Palermo · Mon–Sat 9:00–19:00 · Sunday closed",
-    conf: "You will receive a confirmation on WhatsApp.",
+    conf: "You will receive a confirmation soon .",
     min: "min",
     services: {"Taglio": "Haircut", "Barba": "Beard trim", "Taglio + Barba": "Haircut + beard", "Rasatura": "Shave"},
     closed: "We are closed on Sundays. Please choose another day.",
@@ -46,7 +47,8 @@ var T = {
     phone: "Please enter a valid phone number.",
     sending: "Sending your booking...",
     ok: "✓ Booking sent successfully!",
-    fail: "✕ Booking failed. Please try again."
+    fail: "✕ Booking failed. Please try again.",
+    taken: "✕ That time was just booked. Please choose another."
   },
   ar: {
     dir: "rtl",
@@ -64,14 +66,17 @@ var T = {
     phone: "يرجى إدخال رقم هاتف صحيح.",
     sending: "جارٍ إرسال الحجز...",
     ok: "✓ تم إرسال الحجز بنجاح!",
-    fail: "✕ تعذّر إتمام الحجز. حاول مرة أخرى."
+    fail: "✕ تعذّر إتمام الحجز. حاول مرة أخرى.",
+    taken: "✕ تم حجز هذا الموعد للتو. يرجى اختيار وقت آخر."
   }
 };
 // ==========================
 
 var sel = {s: null, t: null};
 var lang = "it";
-var msg = null; // ultimo messaggio mostrato {key, type}, così cambia lingua insieme al resto
+var msg = null;      // ultimo messaggio mostrato {key, type}, così cambia lingua insieme al resto
+var booked = [];     // orari già prenotati per il giorno scelto (arrivano dal worker)
+var loadId = 0;      // per ignorare risposte vecchie quando si cambia giorno in fretta
 
 var srv = document.getElementById("srv"),
     slots = document.getElementById("slots"),
@@ -130,6 +135,20 @@ function renderServices() {
 }
 
 /* ---------- time slots ---------- */
+// disattiva gli orari già prenotati (e deseleziona se era scelto proprio uno di quelli)
+function applyBooked() {
+  [].forEach.call(slots.children, function (b) {
+    if (booked.indexOf(b.textContent) !== -1) {
+      b.disabled = true;
+      if (sel.t === b.textContent) {
+        sel.t = null;
+        b.classList.remove("on");
+        b.setAttribute("aria-pressed", "false");
+      }
+    }
+  });
+}
+
 function draw() {
   slots.innerHTML = "";
   sel.t = null;
@@ -153,6 +172,35 @@ function draw() {
     };
     slots.appendChild(b);
   });
+  applyBooked();
+}
+
+// chiede al worker gli orari già presi per il giorno scelto: GET API_URL?date=YYYY-MM-DD
+// risposta attesa: {"success": true, "booked": ["15:00", "16:30"]}
+async function loadBooked() {
+  var id = ++loadId, d = day.value;
+  if (!d || isClosed(d)) { slots.style.opacity = ""; return; }
+  slots.style.opacity = ".6";
+  var list = [];
+  try {
+    var r = await fetch(API_URL + "?date=" + encodeURIComponent(d));
+    var j = await r.json();
+    if (j && j.success && Array.isArray(j.booked)) {
+      list = j.booked.map(function (x) { return String(x).slice(0, 5); });
+    }
+  } catch (e) {
+    // se il worker non risponde, la pagina resta utilizzabile con tutti gli orari liberi
+  }
+  if (id !== loadId) return; // nel frattempo è stato scelto un altro giorno
+  booked = list;
+  slots.style.opacity = "";
+  applyBooked();
+}
+
+function changeDay() {
+  booked = [];
+  draw();
+  loadBooked();
 }
 
 /* ---------- language ---------- */
@@ -192,8 +240,9 @@ if (new Date(iso(start) + "T" + ORARI[ORARI.length - 1] + ":00") < today) start.
 while (start.getDay() === 0) start.setDate(start.getDate() + 1);
 day.value = iso(start);
 
-day.onchange = draw;
+day.onchange = changeDay;
 draw();
+loadBooked();
 
 var initial = null;
 try { initial = localStorage.getItem("lang"); } catch (e) {}
@@ -220,6 +269,8 @@ btn.onclick = async function () {
   showMsg("sending", "sending");
   btn.disabled = true;
 
+  var bookedTime = sel.t;
+
   try {
     var response = await fetch(API_URL, {
       method: "POST",
@@ -227,23 +278,35 @@ btn.onclick = async function () {
       body: JSON.stringify({
         service: sel.s,
         date: day.value,
-        time: sel.t,
+        time: bookedTime,
         name: n,
         phone: p,
         lang: lang
       })
     });
 
-    var result = await response.json();
+    var result = {};
+    try { result = await response.json(); } catch (e) {}
+
+    // qualcun altro ha prenotato lo stesso orario un attimo prima
+    if (response.status === 409 || result.error === "taken") {
+      showMsg("taken", "error");
+      loadBooked();
+      return;
+    }
+
     if (!response.ok || !result.success) throw new Error("Booking failed");
 
     showMsg("ok", "success");
+    // l'orario appena prenotato diventa subito non disponibile
+    if (booked.indexOf(bookedTime) === -1) booked.push(bookedTime);
     // svuota il modulo così non si invia due volte la stessa prenotazione
     nm.value = "";
     tel.value = "";
     sel.s = null;
     renderServices();
     draw();
+    loadBooked();
   } catch (error) {
     showMsg("fail", "error");
   } finally {
