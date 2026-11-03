@@ -4,12 +4,12 @@ var API_URL = "https://barber-booking.abderrahmanem627.workers.dev/";
 // id = nome in italiano che arriva al barbiere; price/min sono mostrati al cliente.
 // I nomi nelle altre lingue sono in T.xx.services qui sotto.
 var SERVIZI = [
-  {id: "Taglio",         price: "€15", min: 30},
-  {id: "Barba",          price: "€10", min: 20},
-  {id: "Taglio + Barba", price: "€22", min: 45},
+  {id: "Taglio",         price: "€7", min: 30},
+  {id: "Barba",          price: "€5", min: 20},
+  {id: "Taglio + Barba", price: "€10", min: 45},
   {id: "Rasatura",       price: "€12", min: 25}
 ];
-var ORARI = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30"];
+var ORARI = ["14:00","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00"];
 
 var T = {
   it: {
